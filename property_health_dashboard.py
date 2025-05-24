@@ -1,0 +1,663 @@
+#!/usr/bin/env python3
+"""
+Property Health Intelligence Dashboard
+A comprehensive dashboard application for property health monitoring and management.
+"""
+
+import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import json
+import datetime
+from dataclasses import dataclass, asdict
+from typing import List, Dict, Optional
+import random
+
+# Configure page
+st.set_page_config(
+    page_title="Property Health Intelligence Dashboard",
+    page_icon="🏠",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+@dataclass
+class Property:
+    """Property data structure."""
+    address: str
+    year_built: int
+    square_footage: int
+    property_type: str
+    roof_material: str
+    foundation_type: str
+    hvac_age: int
+    electrical_age: int
+    plumbing_age: int
+    last_inspection: str
+    
+@dataclass
+class MaintenanceRecord:
+    """Maintenance record data structure."""
+    date: str
+    category: str
+    description: str
+    cost: float
+    contractor: str
+    urgency: str
+
+class PropertyHealthCalculator:
+    """Calculate property health scores and predictions."""
+    
+    def __init__(self):
+        self.weights = {
+            'structural': 0.3,
+            'systems': 0.4,
+            'safety': 0.2,
+            'environmental': 0.1
+        }
+    
+    def calculate_age_score(self, age: int, expected_life: int) -> float:
+        """Calculate score based on age vs expected lifespan."""
+        if age <= 0:
+            return 100
+        ratio = age / expected_life
+        if ratio <= 0.5:
+            return 100 - (ratio * 20)  # Minimal degradation in first half
+        elif ratio <= 0.8:
+            return 90 - ((ratio - 0.5) * 100)  # Moderate degradation
+        else:
+            return max(0, 60 - ((ratio - 0.8) * 150))  # Rapid degradation
+    
+    def calculate_structural_score(self, property_data: Property) -> Dict:
+        """Calculate structural integrity score."""
+        age = 2024 - property_data.year_built
+        foundation_scores = {
+            'Concrete Slab': 85,
+            'Basement': 90,
+            'Crawl Space': 75,
+            'Pier & Beam': 70
+        }
+        
+        roof_scores = {
+            'Asphalt Shingles': 80,
+            'Metal': 90,
+            'Tile': 95,
+            'Slate': 98,
+            'Wood': 70
+        }
+        
+        age_score = self.calculate_age_score(age, 80)
+        foundation_score = foundation_scores.get(property_data.foundation_type, 75)
+        roof_score = roof_scores.get(property_data.roof_material, 80)
+        
+        overall_score = (age_score * 0.4 + foundation_score * 0.3 + roof_score * 0.3)
+        
+        return {
+            'score': round(overall_score, 1),
+            'components': {
+                'Age Factor': round(age_score, 1),
+                'Foundation': foundation_score,
+                'Roof': roof_score
+            }
+        }
+    
+    def calculate_systems_score(self, property_data: Property) -> Dict:
+        """Calculate core systems score."""
+        hvac_score = self.calculate_age_score(property_data.hvac_age, 15)
+        electrical_score = self.calculate_age_score(property_data.electrical_age, 40)
+        plumbing_score = self.calculate_age_score(property_data.plumbing_age, 50)
+        
+        overall_score = (hvac_score * 0.4 + electrical_score * 0.3 + plumbing_score * 0.3)
+        
+        return {
+            'score': round(overall_score, 1),
+            'components': {
+                'HVAC': round(hvac_score, 1),
+                'Electrical': round(electrical_score, 1),
+                'Plumbing': round(plumbing_score, 1)
+            }
+        }
+    
+    def calculate_safety_score(self, property_data: Property) -> Dict:
+        """Calculate safety and compliance score."""
+        # Simplified safety calculation based on age and type
+        base_score = 85
+        age = 2024 - property_data.year_built
+        
+        if age > 30:
+            base_score -= 10
+        if age > 50:
+            base_score -= 10
+            
+        return {
+            'score': round(base_score, 1),
+            'components': {
+                'Code Compliance': base_score,
+                'Safety Systems': base_score,
+                'Accessibility': base_score - 5
+            }
+        }
+    
+    def calculate_environmental_score(self, zip_code: str = "22701") -> Dict:
+        """Calculate environmental exposure score."""
+        # Simplified environmental scoring
+        base_score = 80
+        
+        return {
+            'score': round(base_score, 1),
+            'components': {
+                'Weather Exposure': base_score,
+                'Natural Disasters': base_score + 5,
+                'Air Quality': base_score - 5
+            }
+        }
+    
+    def calculate_overall_score(self, property_data: Property) -> Dict:
+        """Calculate overall property health score."""
+        structural = self.calculate_structural_score(property_data)
+        systems = self.calculate_systems_score(property_data)
+        safety = self.calculate_safety_score(property_data)
+        environmental = self.calculate_environmental_score()
+        
+        overall = (
+            structural['score'] * self.weights['structural'] +
+            systems['score'] * self.weights['systems'] +
+            safety['score'] * self.weights['safety'] +
+            environmental['score'] * self.weights['environmental']
+        )
+        
+        return {
+            'overall_score': round(overall, 1),
+            'category_scores': {
+                'Structural': structural,
+                'Systems': systems,
+                'Safety': safety,
+                'Environmental': environmental
+            }
+        }
+
+class Dashboard:
+    """Main dashboard class."""
+    
+    def __init__(self):
+        self.calculator = PropertyHealthCalculator()
+        self.init_session_state()
+    
+    def init_session_state(self):
+        """Initialize session state variables."""
+        if 'properties' not in st.session_state:
+            st.session_state.properties = []
+        if 'maintenance_records' not in st.session_state:
+            st.session_state.maintenance_records = []
+        if 'selected_property_idx' not in st.session_state:
+            st.session_state.selected_property_idx = 0
+    
+    def render_header(self):
+        """Render dashboard header."""
+        st.title("🏠 Property Health Intelligence Dashboard")
+        st.markdown("---")
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("Total Properties", len(st.session_state.properties))
+        
+        with col2:
+            if st.session_state.properties:
+                avg_score = np.mean([
+                    self.calculator.calculate_overall_score(prop)['overall_score'] 
+                    for prop in st.session_state.properties
+                ])
+                st.metric("Average Health Score", f"{avg_score:.1f}")
+            else:
+                st.metric("Average Health Score", "N/A")
+        
+        with col3:
+            urgent_items = len([r for r in st.session_state.maintenance_records if r.urgency == "High"])
+            st.metric("Urgent Items", urgent_items)
+        
+        with col4:
+            total_maintenance_cost = sum([r.cost for r in st.session_state.maintenance_records])
+            st.metric("Total Maintenance Cost", f"${total_maintenance_cost:,.0f}")
+    
+    def render_property_input(self):
+        """Render property input form."""
+        st.sidebar.header("Add New Property")
+        
+        with st.sidebar.form("property_form"):
+            address = st.text_input("Property Address")
+            year_built = st.number_input("Year Built", min_value=1800, max_value=2024, value=2000)
+            square_footage = st.number_input("Square Footage", min_value=500, max_value=10000, value=2000)
+            
+            property_type = st.selectbox("Property Type", [
+                "Single Family", "Townhouse", "Condo", "Multi-Family", "Commercial"
+            ])
+            
+            roof_material = st.selectbox("Roof Material", [
+                "Asphalt Shingles", "Metal", "Tile", "Slate", "Wood"
+            ])
+            
+            foundation_type = st.selectbox("Foundation Type", [
+                "Concrete Slab", "Basement", "Crawl Space", "Pier & Beam"
+            ])
+            
+            hvac_age = st.number_input("HVAC System Age (years)", min_value=0, max_value=50, value=5)
+            electrical_age = st.number_input("Electrical System Age (years)", min_value=0, max_value=100, value=15)
+            plumbing_age = st.number_input("Plumbing Age (years)", min_value=0, max_value=100, value=20)
+            
+            last_inspection = st.date_input("Last Inspection Date").strftime("%Y-%m-%d")
+            
+            submitted = st.form_submit_button("Add Property")
+            
+            if submitted and address:
+                new_property = Property(
+                    address=address,
+                    year_built=year_built,
+                    square_footage=square_footage,
+                    property_type=property_type,
+                    roof_material=roof_material,
+                    foundation_type=foundation_type,
+                    hvac_age=hvac_age,
+                    electrical_age=electrical_age,
+                    plumbing_age=plumbing_age,
+                    last_inspection=last_inspection
+                )
+                st.session_state.properties.append(new_property)
+                st.success(f"Added property: {address}")
+                st.rerun()
+    
+    def render_maintenance_input(self):
+        """Render maintenance record input."""
+        if not st.session_state.properties:
+            return
+            
+        st.sidebar.header("Add Maintenance Record")
+        
+        with st.sidebar.form("maintenance_form"):
+            property_addresses = [prop.address for prop in st.session_state.properties]
+            selected_address = st.selectbox("Property", property_addresses)
+            
+            date = st.date_input("Date").strftime("%Y-%m-%d")
+            category = st.selectbox("Category", [
+                "HVAC", "Plumbing", "Electrical", "Roofing", "Foundation", "General"
+            ])
+            description = st.text_area("Description")
+            cost = st.number_input("Cost ($)", min_value=0.0, value=0.0, step=50.0)
+            contractor = st.text_input("Contractor")
+            urgency = st.selectbox("Urgency", ["Low", "Medium", "High"])
+            
+            submitted = st.form_submit_button("Add Record")
+            
+            if submitted and description:
+                new_record = MaintenanceRecord(
+                    date=date,
+                    category=category,
+                    description=description,
+                    cost=cost,
+                    contractor=contractor,
+                    urgency=urgency
+                )
+                st.session_state.maintenance_records.append(new_record)
+                st.success("Added maintenance record")
+                st.rerun()
+    
+    def render_property_selector(self):
+        """Render property selector."""
+        if not st.session_state.properties:
+            st.info("👈 Add a property to get started!")
+            return None
+            
+        addresses = [prop.address for prop in st.session_state.properties]
+        selected_address = st.selectbox("Select Property", addresses)
+        
+        selected_idx = addresses.index(selected_address)
+        st.session_state.selected_property_idx = selected_idx
+        
+        return st.session_state.properties[selected_idx]
+    
+    def render_health_score_visualization(self, property_data: Property):
+        """Render health score visualizations."""
+        scores = self.calculator.calculate_overall_score(property_data)
+        
+        col1, col2 = st.columns([1, 2])
+        
+        with col1:
+            # Overall score gauge
+            fig_gauge = go.Figure(go.Indicator(
+                mode = "gauge+number+delta",
+                value = scores['overall_score'],
+                domain = {'x': [0, 1], 'y': [0, 1]},
+                title = {'text': "Overall Health Score"},
+                delta = {'reference': 80},
+                gauge = {
+                    'axis': {'range': [None, 100]},
+                    'bar': {'color': "darkblue"},
+                    'steps': [
+                        {'range': [0, 50], 'color': "lightgray"},
+                        {'range': [50, 80], 'color': "gray"}],
+                    'threshold': {
+                        'line': {'color': "red", 'width': 4},
+                        'thickness': 0.75,
+                        'value': 90}
+                }
+            ))
+            fig_gauge.update_layout(height=300)
+            st.plotly_chart(fig_gauge, use_container_width=True)
+        
+        with col2:
+            # Category scores bar chart
+            categories = list(scores['category_scores'].keys())
+            category_scores = [scores['category_scores'][cat]['score'] for cat in categories]
+            
+            fig_bar = px.bar(
+                x=category_scores,
+                y=categories,
+                orientation='h',
+                title="Category Scores",
+                color=category_scores,
+                color_continuous_scale="RdYlGn",
+                range_color=[0, 100]
+            )
+            fig_bar.update_layout(height=300)
+            st.plotly_chart(fig_bar, use_container_width=True)
+    
+    def render_detailed_breakdown(self, property_data: Property):
+        """Render detailed score breakdown."""
+        scores = self.calculator.calculate_overall_score(property_data)
+        
+        st.subheader("Detailed Breakdown")
+        
+        for category, data in scores['category_scores'].items():
+            with st.expander(f"{category} - Score: {data['score']}"):
+                for component, score in data['components'].items():
+                    col1, col2 = st.columns([3, 1])
+                    with col1:
+                        st.write(f"**{component}**")
+                    with col2:
+                        color = "green" if score >= 80 else "orange" if score >= 60 else "red"
+                        st.markdown(f"<span style='color:{color}'>{score}</span>", unsafe_allow_html=True)
+    
+    def render_maintenance_history(self, property_data: Property):
+        """Render maintenance history for selected property."""
+        st.subheader("Maintenance History")
+        
+        property_records = [
+            r for r in st.session_state.maintenance_records 
+            if property_data.address in [prop.address for prop in st.session_state.properties]
+        ]
+        
+        if not property_records:
+            st.info("No maintenance records found for this property.")
+            return
+        
+        # Convert to DataFrame for better display
+        records_data = []
+        for record in property_records:
+            records_data.append({
+                'Date': record.date,
+                'Category': record.category,
+                'Description': record.description,
+                'Cost': f"${record.cost:,.0f}",
+                'Contractor': record.contractor,
+                'Urgency': record.urgency
+            })
+        
+        df = pd.DataFrame(records_data)
+        st.dataframe(df, use_container_width=True)
+        
+        # Cost over time chart
+        if len(property_records) > 1:
+            dates = [datetime.datetime.strptime(r.date, "%Y-%m-%d") for r in property_records]
+            costs = [r.cost for r in property_records]
+            
+            fig_costs = px.line(
+                x=dates, 
+                y=costs,
+                title="Maintenance Costs Over Time",
+                labels={'x': 'Date', 'y': 'Cost ($)'}
+            )
+            st.plotly_chart(fig_costs, use_container_width=True)
+    
+    def render_predictions_and_recommendations(self, property_data: Property):
+        """Render predictions and recommendations."""
+        st.subheader("Predictions & Recommendations")
+        
+        scores = self.calculator.calculate_overall_score(property_data)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.write("**Upcoming Maintenance Predictions:**")
+            
+            # Generate some sample predictions based on system ages
+            predictions = []
+            
+            if property_data.hvac_age > 10:
+                predictions.append({
+                    'item': 'HVAC Filter Replacement',
+                    'timeframe': '1-2 months',
+                    'estimated_cost': '$50-100',
+                    'priority': 'Medium'
+                })
+            
+            if property_data.hvac_age > 12:
+                predictions.append({
+                    'item': 'HVAC System Service',
+                    'timeframe': '3-6 months',
+                    'estimated_cost': '$200-400',
+                    'priority': 'High'
+                })
+            
+            if property_data.electrical_age > 25:
+                predictions.append({
+                    'item': 'Electrical Panel Inspection',
+                    'timeframe': '6-12 months',
+                    'estimated_cost': '$150-300',
+                    'priority': 'Medium'
+                })
+            
+            for pred in predictions:
+                priority_color = {
+                    'Low': 'green',
+                    'Medium': 'orange',
+                    'High': 'red'
+                }.get(pred['priority'], 'gray')
+                
+                st.markdown(f"""
+                **{pred['item']}**  
+                🕒 {pred['timeframe']} | 💰 {pred['estimated_cost']} | 
+                <span style='color:{priority_color}'>●</span> {pred['priority']} Priority
+                """, unsafe_allow_html=True)
+                st.markdown("---")
+        
+        with col2:
+            st.write("**Recommended Actions:**")
+            
+            # Generate recommendations based on scores
+            for category, data in scores['category_scores'].items():
+                if data['score'] < 70:
+                    st.warning(f"**{category}**: Score below 70. Consider professional inspection.")
+                elif data['score'] < 85:
+                    st.info(f"**{category}**: Good condition. Monitor for changes.")
+                else:
+                    st.success(f"**{category}**: Excellent condition.")
+    
+    def render_contractor_marketplace(self):
+        """Render contractor marketplace simulation."""
+        st.subheader("Find Certified Professionals")
+        
+        # Sample contractors
+        contractors = [
+            {
+                'name': 'ABC HVAC Services',
+                'category': 'HVAC',
+                'rating': 4.8,
+                'reviews': 234,
+                'price_range': '$$',
+                'response_time': '2-4 hours'
+            },
+            {
+                'name': 'Reliable Plumbing Co.',
+                'category': 'Plumbing',
+                'rating': 4.6,
+                'reviews': 156,
+                'price_range': '$',
+                'response_time': '1-2 hours'
+            },
+            {
+                'name': 'Elite Electrical',
+                'category': 'Electrical',
+                'rating': 4.9,
+                'reviews': 89,
+                'price_range': '$$$',
+                'response_time': '4-6 hours'
+            },
+            {
+                'name': 'Superior Roofing',
+                'category': 'Roofing',
+                'rating': 4.7,
+                'reviews': 312,
+                'price_range': '$$',
+                'response_time': '24 hours'
+            }
+        ]
+        
+        category_filter = st.selectbox("Filter by Category", 
+            ['All'] + list(set([c['category'] for c in contractors]))
+        )
+        
+        filtered_contractors = contractors if category_filter == 'All' else [
+            c for c in contractors if c['category'] == category_filter
+        ]
+        
+        for contractor in filtered_contractors:
+            with st.container():
+                col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
+                
+                with col1:
+                    st.write(f"**{contractor['name']}**")
+                    st.write(f"Category: {contractor['category']}")
+                    st.write(f"⭐ {contractor['rating']} ({contractor['reviews']} reviews)")
+                
+                with col2:
+                    st.write(f"**Price: {contractor['price_range']}**")
+                
+                with col3:
+                    st.write(f"**Response: {contractor['response_time']}**")
+                
+                with col4:
+                    if st.button(f"Contact", key=f"contact_{contractor['name']}"):
+                        st.success(f"Contact request sent to {contractor['name']}!")
+                
+                st.markdown("---")
+    
+    def render_analytics_dashboard(self):
+        """Render analytics and insights."""
+        if not st.session_state.properties:
+            return
+            
+        st.subheader("Portfolio Analytics")
+        
+        # Calculate scores for all properties
+        all_scores = []
+        for prop in st.session_state.properties:
+            score_data = self.calculator.calculate_overall_score(prop)
+            all_scores.append({
+                'address': prop.address,
+                'overall_score': score_data['overall_score'],
+                'structural': score_data['category_scores']['Structural']['score'],
+                'systems': score_data['category_scores']['Systems']['score'],
+                'safety': score_data['category_scores']['Safety']['score'],
+                'environmental': score_data['category_scores']['Environmental']['score'],
+                'year_built': prop.year_built,
+                'property_type': prop.property_type
+            })
+        
+        df_scores = pd.DataFrame(all_scores)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Score distribution
+            fig_hist = px.histogram(
+                df_scores, 
+                x='overall_score',
+                title="Property Health Score Distribution",
+                nbins=20
+            )
+            st.plotly_chart(fig_hist, use_container_width=True)
+        
+        with col2:
+            # Scores by property type
+            if len(df_scores) > 1:
+                fig_box = px.box(
+                    df_scores,
+                    x='property_type',
+                    y='overall_score',
+                    title="Scores by Property Type"
+                )
+                st.plotly_chart(fig_box, use_container_width=True)
+        
+        # Category comparison
+        category_cols = ['structural', 'systems', 'safety', 'environmental']
+        avg_scores = df_scores[category_cols].mean()
+        
+        fig_radar = go.Figure()
+        fig_radar.add_trace(go.Scatterpolar(
+            r=avg_scores.values,
+            theta=avg_scores.index,
+            fill='toself',
+            name='Average Scores'
+        ))
+        fig_radar.update_layout(
+            polar=dict(
+                radialaxis=dict(
+                    visible=True,
+                    range=[0, 100]
+                )),
+            showlegend=True,
+            title="Average Category Scores"
+        )
+        st.plotly_chart(fig_radar, use_container_width=True)
+    
+    def run(self):
+        """Run the main dashboard."""
+        self.render_header()
+        
+        # Sidebar inputs
+        self.render_property_input()
+        self.render_maintenance_input()
+        
+        # Main content tabs
+        tab1, tab2, tab3, tab4 = st.tabs([
+            "Property Health", "Maintenance", "Find Contractors", "Analytics"
+        ])
+        
+        with tab1:
+            selected_property = self.render_property_selector()
+            if selected_property:
+                self.render_health_score_visualization(selected_property)
+                self.render_detailed_breakdown(selected_property)
+                self.render_predictions_and_recommendations(selected_property)
+        
+        with tab2:
+            selected_property = self.render_property_selector()
+            if selected_property:
+                self.render_maintenance_history(selected_property)
+        
+        with tab3:
+            self.render_contractor_marketplace()
+        
+        with tab4:
+            self.render_analytics_dashboard()
+
+def main():
+    """Main function to run the dashboard."""
+    dashboard = Dashboard()
+    dashboard.run()
+
+if __name__ == "__main__":
+    main()
