@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Health Intelligence Platform - Pitch Deck</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .slideshow-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slide {
+            display: none;
+            width: 90%;
+            max-width: 1000px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .slide.active {
+            display: block;
+            animation: slideIn 0.5s ease-in-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #fff, #e0e0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            color: #fff;
+        }
+
+        h3 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #e0e0ff;
+        }
+
+        p, li {
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .tagline {
+            font-size: 1.5em;
+            font-style: italic;
+            color: #b8c6ff;
+            margin-bottom: 30px;
+        }
+
+        .highlight {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        ul {
+            text-align: left;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .slide-counter {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .cta-section {
+            background: rgba(255, 215, 0, 0.2);
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .team-member {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .financial-table {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .phase {
+            background: rgba(255, 255, 255, 0.1);
+            margin: 15px 0;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div class="slideshow-container">
+        <div class="slide-counter">
+            <span id="slideNumber">1</span> / <span id="totalSlides">15</span>
+        </div>
+
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <h1>[Your Company Name]</h1>
+            <p class="tagline">The Credit Score for Property Health</p>
+            <h3>Preventing surprise repairs, one home at a time</h3>
+            <div class="highlight">
+                <p><strong>Presenter:</strong> [Your Name], Co-Founder</p>
+                <p><strong>Date:</strong> May 2025</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: The Problem -->
+        <div class="slide">
+            <h2>The Problem</h2>
+            <h3>Every year, 68% of homeowners face unexpected repair bills</h3>
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-number">$10K</div>
+                    <p>Average surprise repair cost</p>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">47%</div>
+                    <p>Don't have $1,000 for emergencies</p>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">0</div>
+                    <p>Accessible solutions for regular families</p>
+                </div>
+            </div>
+            <div class="highlight">
+                <p><strong>The Result:</strong> Families choose between financial stress or living with deteriorating homes</p>
+            </div>
+        </div>
+
+        <!-- Slide 3: The Opportunity -->
+        <div class="slide">
+            <h2>The Opportunity</h2>
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-number">$400B+</div>
+                    <p>Annual Home Maintenance Market</p>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">85M</div>
+                    <p>Homeowners in the US</p>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">$4,700</div>
+                    <p>Average annual maintenance spending</p>
+                </div>
+            </div>
+            <div class="highlight">
+                <h3>"What if we could give every homeowner the property intelligence that only the wealthy can afford?"</h3>
+            </div>
+        </div>
+
+        <!-- Slide 4: Our Solution -->
+        <div class="slide">
+            <h2>Our Solution</h2>
+            <h3>The First Proactive Home Health Platform for Everyone</h3>
+            <div class="highlight">
+                <h3>How it works:</h3>
+                <ul>
+                    <li><strong>Auto-populate</strong> home data from public records</li>
+                    <li><strong>Analyze</strong> age, materials, weather history, user photos</li>
+                    <li><strong>Generate</strong> personalized maintenance scores & predictions</li>
+                    <li><strong>Alert</strong> homeowners before problems become expensive</li>
+                    <li><strong>Connect</strong> them instantly with certified local professionals</li>
+                </ul>
+            </div>
+            <p class="tagline">Like a credit score, but for your home's health</p>
+        </div>
+
+        <!-- Slide 5: Product Features -->
+        <div class="slide">
+            <h2>Key Features</h2>
+            <div class="stats">
+                <div class="stat-box">
+                    <h3>📊 Health Reports</h3>
+                    <p>Monthly comprehensive analysis</p>
+                </div>
+                <div class="stat-box">
+                    <h3>🔔 Smart Alerts</h3>
+                    <p>Customizable notifications</p>
+                </div>
+                <div class="stat-box">
+                    <h3>🔧 Pro Network</h3>
+                    <p>Local certified professionals</p>
+                </div>
+                <div class="stat-box">
+                    <h3>💰 Savings Tracker</h3>
+                    <p>Quantified value protection</p>
+                </div>
+            </div>
+            <div class="highlight">
+                <p><strong>User Control:</strong> Choose when and how you want to be notified</p>
+            </div>
+        </div>
+
+        <!-- Slide 6: Why Now -->
+        <div class="slide">
+            <h2>Why Now?</h2>
+            <h3>Perfect Storm of Opportunity</h3>
+            <ul>
+                <li><strong>Economic Pressure:</strong> Rising repair costs + inflation</li>
+                <li><strong>Technology Ready:</strong> AI/ML accessible, public data available</li>
+                <li><strong>Behavior Shift:</strong> COVID increased focus on home investment</li>
+                <li><strong>Market Gap:</strong> Existing solutions serve only premium market</li>
+                <li><strong>Smart Home Growth:</strong> 69% increase in connected devices (2020-2024)</li>
+            </ul>
+            <div class="highlight">
+                <p><strong>The market is ready for democratized property intelligence</strong></p>
+            </div>
+        </div>
+
+        <!-- Slide 7: Business Model -->
+        <div class="slide">
+            <h2>Business Model</h2>
+            <h3>Accessible Pricing + Transaction Revenue</h3>
+            <div class="stats">
+                <div class="stat-box">
+                    <h3>Basic</h3>
+                    <div class="stat-number">$5</div>
+                    <p>per month</p>
+                    <p>Alerts + basic insights</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Premium</h3>
+                    <div class="stat-number">$15</div>
+                    <p>per month</p>
+                    <p>Advanced predictions</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Pro</h3>
+                    <div class="stat-number">$30</div>
+                    <p>per month</p>
+                    <p>Comprehensive analysis</p>
+                </div>
+            </div>
+            <div class="highlight">
+                <p><strong>Transaction Revenue:</strong> 10-15% commission on contractor bookings</p>
+                <p><strong>Average booking:</strong> $500-$2,000</p>
+            </div>
+        </div>
+
+        <!-- Slide 8: Go-to-Market -->
+        <div class="slide">
+            <h2>Go-to-Market Strategy</h2>
+            <h3>Prove It Works, Then Scale</h3>
+            <div class="phase">
+                <h3>Phase 1: Culpeper, Virginia</h3>
+                <p>Population: 20,000 | Target: 1,000 users (5% penetration)</p>
+                <p>Build network of 20-30 certified professionals</p>
+            </div>
+            <div class="phase">
+                <h3>Phase 2: Regional Expansion</h3>
+                <p>Adjacent small towns (10,000-30,000 population)</p>
+                <p>Replicate successful playbook</p>
+            </div>
+            <div class="phase">
+                <h3>Phase 3: Scale</h3>
+                <p>Enter larger markets with proven case studies</p>
+                <p>Expand to commercial properties and vehicles</p>
+            </div>
+        </div>
+
+        <!-- Slide 9: Competition -->
+        <div class="slide">
+            <h2>Competitive Landscape</h2>
+            <h3>We're Creating a New Category</h3>
+            <div class="stats">
+                <div class="stat-box">
+                    <h3>Property Management</h3>
+                    <p>Enterprise-focused, expensive</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Home Warranties</h3>
+                    <p>Reactive, poor experience</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Inspections</h3>
+                    <p>One-time, not predictive</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Smart Home</h3>
+                    <p>Data without insights</p>
+                </div>
+            </div>
+            <div class="highlight">
+                <p><strong>Our Advantage:</strong> $5 vs $500+ | Proactive vs Reactive | Small-town focus</p>
+            </div>
+        </div>
+
+        <!-- Slide 10: Market Size -->
+        <div class="slide">
+            <h2>Market Size & Expansion</h2>
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-number">$47B</div>
+                    <p>Addressable Market</p>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">19,500</div>
+                    <p>Towns under 50K people</p>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">8,500</div>
+                    <p>Average households per town</p>
+                </div>
+            </div>
+            <div class="highlight">
+                <h3>Expansion Opportunities:</h3>
+                <p>Suburban markets: +$28B | Commercial properties: +$15B | Vehicles: +$12B</p>
+                <p><strong>Conservative 1% capture = $470M annual revenue</strong></p>
+            </div>
+        </div>
+
+        <!-- Slide 11: Financial Projections -->
+        <div class="slide">
+            <h2>Financial Projections</h2>
+            <div class="financial-table">
+                <div class="stats">
+                    <div class="stat-box">
+                        <h3>Year 1</h3>
+                        <div class="stat-number">$105K</div>
+                        <p>1,000 users in Culpeper</p>
+                    </div>
+                    <div class="stat-box">
+                        <h3>Year 3</h3>
+                        <div class="stat-number">$2.77M</div>
+                        <p>15,000 users in 10 towns</p>
+                    </div>
+                    <div class="stat-box">
+                        <h3>Year 5</h3>
+                        <div class="stat-number">$34.5M</div>
+                        <p>150,000 users in 100 towns</p>
+                    </div>
+                </div>
+            </div>
+            <div class="highlight">
+                <p><strong>Revenue Mix:</strong> Subscription + Transaction fees from contractor bookings</p>
+            </div>
+        </div>
+
+        <!-- Slide 12: Team -->
+        <div class="slide">
+            <h2>The Team</h2>
+            <div class="team-grid">
+                <div class="team-member">
+                    <h3>[Your Name]</h3>
+                    <p><strong>Co-Founder & CEO</strong></p>
+                    <p>[Your background/expertise]</p>
+                    <p>Native of Culpeper, VA</p>
+                </div>
+                <div class="team-member">
+                    <h3>[Co-founder Name]</h3>
+                    <p><strong>[Title]</strong></p>
+                    <p>[Their background]</p>
+                </div>
+                <div class="team-member">
+                    <h3>JESquared Partnership</h3>
+                    <p><strong>Strategic Partner</strong></p>
+                    <p>[JESquared expertise/role]</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: Funding -->
+        <div class="slide">
+            <h2>Funding & Use of Funds</h2>
+            <h3>Seeking $[Amount] Seed Round</h3>
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-number">40%</div>
+                    <p>Product Development</p>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">30%</div>
+                    <p>Market Entry</p>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">20%</div>
+                    <p>Team Expansion</p>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">10%</div>
+                    <p>Operations</p>
+                </div>
+            </div>
+            <div class="highlight">
+                <p><strong>Milestones:</strong> Culpeper launch (Month 6) | 1,000 users (Month 18) | Series A ready (Month 30)</p>
+            </div>
+        </div>
+
+        <!-- Slide 14: Vision -->
+        <div class="slide">
+            <h2>Vision & Impact</h2>
+            <h3>Becoming the Standard for Property Health</h3>
+            <div class="highlight">
+                <p class="tagline">"Every homeowner in America has access to intelligent property insights, preventing billions in surprise repairs and helping families preserve their most valuable asset."</p>
+            </div>
+            <ul>
+                <li>Families save thousands on avoided repairs</li>
+                <li>Local contractors get steady, qualified customers</li>
+                <li>Communities maintain property values and safety</li>
+                <li>Democratize access to property intelligence</li>
+            </ul>
+            <div class="cta-section">
+                <p><strong>We're not just building a platform - we're building peace of mind.</strong></p>
+            </div>
+        </div>
+
+        <!-- Slide 15: Call to Action -->
+        <div class="slide">
+            <h2>Join Us in Revolutionizing Home Ownership</h2>
+            <div class="stats">
+                <div class="stat-box">
+                    <h3>What We Need</h3>
+                    <p>Strategic investors</p>
+                    <p>Industry advisors</p>
+                    <p>Strategic partners</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Next Steps</h3>
+                    <p>Pilot launch: Q2 2025</p>
+                    <p>Contractor partnerships: Q1 2025</p>
+                    <p>Beta recruitment: Q1 2025</p>
+                </div>
+            </div>
+            <div class="cta-section">
+                <h3>"Let's give every family the power to protect their home."</h3>
+                <p><strong>Contact:</strong> [Your email and contact information]</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">Previous</button>
+        <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">Next</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        document.getElementById('totalSlides').textContent = totalSlides;
+
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + totalSlides) % totalSlides;
+            slides[currentSlide].classList.add('active');
+            
+            document.getElementById('slideNumber').textContent = currentSlide + 1;
+            
+            // Update navigation buttons
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+        }
+
+        function changeSlide(direction) {
+            if (direction === 1 && currentSlide < totalSlides - 1) {
+                showSlide(currentSlide + 1);
+            } else if (direction === -1 && currentSlide > 0) {
+                showSlide(currentSlide - 1);
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowRight') changeSlide(1);
+            if (event.key === 'ArrowLeft') changeSlide(-1);
+        });
+
+        // Initialize
+        showSlide(0);
+    </script>
+</body>
+</html>
