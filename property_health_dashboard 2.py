@@ -7,28 +7,173 @@ A comprehensive dashboard application for property health monitoring and managem
 import streamlit as st
 import pandas as pd
 import numpy as np
-try:
-    import plotly.express as px
-    import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
-    PLOTLY_AVAILABLE = True
-except ImportError:
-    PLOTLY_AVAILABLE = False
-    st.error("Plotly is required for this dashboard. Please install it with: pip install plotly")
-from plotly.subplots import make_subplots
 import json
 import datetime
 from dataclasses import dataclass, asdict
 from typing import List, Dict, Optional
 import random
 
-# Configure page
-st.set_page_config(
-    page_title="Property Health Intelligence Dashboard",
-    page_icon="🏠",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+class AuthenticationManager:
+    """Handle authentication and NDA agreement."""
+    
+    def __init__(self):
+        self.password = "PropHealth2025!"  # Change this to your desired password
+        
+    def render_auth_screen(self):
+        """Render the authentication and NDA agreement screen."""
+        # Custom CSS for styling
+        st.markdown("""
+        <style>
+        .auth-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .logo-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .nda-text {
+            background: rgba(255,255,255,0.1);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            border-left: 4px solid #ffd700;
+        }
+        .warning-box {
+            background: rgba(255,69,0,0.2);
+            border: 2px solid #ff4500;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        st.markdown('<div class="auth-container">', unsafe_allow_html=True)
+        
+        # Logo and title section
+        st.markdown('<div class="logo-section">', unsafe_allow_html=True)
+        st.markdown("# 🏠 Property Health Intelligence Platform")
+        st.markdown("### *Prototype Access Portal*")
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        # NDA Agreement
+        st.markdown("## 📋 Non-Disclosure Agreement & Terms of Access")
+        
+        st.markdown("""
+        <div class="nda-text">
+        <h4>🔒 CONFIDENTIAL PROPRIETARY INFORMATION</h4>
+        
+        By accessing this Property Health Intelligence Platform prototype, you acknowledge and agree to the following terms:
+        
+        <strong>1. CONFIDENTIALITY:</strong> This application contains proprietary and confidential information, including but not limited to:
+        • Proprietary algorithms and scoring methodologies
+        • Business processes and operational strategies  
+        • Technical implementations and system architecture
+        • Market research and competitive intelligence
+        • Future product roadmaps and development plans
+        
+        <strong>2. NON-DISCLOSURE:</strong> You agree to:
+        • Keep all information strictly confidential
+        • Not disclose any aspect of this system to third parties
+        • Not use this information for competitive purposes
+        • Not reverse engineer or attempt to replicate functionality
+        
+        <strong>3. INTELLECTUAL PROPERTY:</strong> You acknowledge that:
+        • All content is proprietary and patent-pending
+        • No rights or licenses are granted to you
+        • Unauthorized use may result in legal action
+        • This system is protected under applicable IP laws
+        
+        <strong>4. RESTRICTIONS:</strong> You agree NOT to:
+        • Copy, reproduce, or duplicate any part of this system
+        • Create competing or similar products
+        • Share screenshots, recordings, or descriptions
+        • Attempt to extract underlying code or algorithms
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Warning box
+        st.markdown("""
+        <div class="warning-box">
+        <strong>⚠️ LEGAL WARNING:</strong> Violation of this agreement may result in immediate legal action for breach of confidentiality, misappropriation of trade secrets, and/or patent infringement. Access is logged and monitored.
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Agreement checkboxes
+        st.markdown("## ✅ Required Acknowledgments")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            nda_agreed = st.checkbox("I agree to the NDA terms above", key="nda_checkbox")
+            confidentiality_agreed = st.checkbox("I understand this is confidential", key="conf_checkbox")
+        
+        with col2:
+            no_competition_agreed = st.checkbox("I will not create competing products", key="compete_checkbox")
+            legal_understood = st.checkbox("I understand the legal implications", key="legal_checkbox")
+        
+        # Password entry
+        st.markdown("## 🔑 Access Code")
+        password_input = st.text_input(
+            "Enter access code to continue:", 
+            type="password",
+            placeholder="Access code required"
+        )
+        
+        # Contact information
+        st.markdown("## 📞 Contact Information")
+        with st.expander("For authorized access or questions"):
+            st.write("**Contact:** JESquared24@gmail.com")
+            st.write("**Company:** JESquared")
+            st.write("**Purpose:** Investor/Partner Preview Access")
+        
+        # Access button
+        all_agreed = nda_agreed and confidentiality_agreed and no_competition_agreed and legal_understood
+        password_correct = password_input == self.password
+        
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            if st.button("🚀 ACCESS PLATFORM", type="primary", disabled=not (all_agreed and password_correct)):
+                if all_agreed and password_correct:
+                    st.session_state.authenticated = True
+                    st.session_state.access_timestamp = datetime.datetime.now()
+                    st.success("✅ Access granted! Loading dashboard...")
+                    st.rerun()
+                elif not all_agreed:
+                    st.error("❌ Please agree to all terms before proceeding")
+                elif not password_correct:
+                    st.error("❌ Incorrect access code")
+        
+        # Footer
+        st.markdown("---")
+        st.markdown(
+            "<center><small>© 2025 Property Health Intelligence Platform - All Rights Reserved</small></center>",
+            unsafe_allow_html=True
+        )
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    def is_authenticated(self):
+        """Check if user is authenticated."""
+        return st.session_state.get('authenticated', False)
+    
+    def render_session_info(self):
+        """Render session information in sidebar."""
+        if self.is_authenticated():
+            access_time = st.session_state.get('access_timestamp', 'Unknown')
+            st.sidebar.markdown("---")
+            st.sidebar.markdown("**🔒 Authorized Session**")
+            st.sidebar.markdown(f"**Access Time:** {access_time.strftime('%Y-%m-%d %H:%M')}")
+            
+            if st.sidebar.button("🚪 End Session", type="secondary"):
+                st.session_state.authenticated = False
+                st.rerun()
 
 @dataclass
 class Property:
@@ -190,6 +335,7 @@ class Dashboard:
     
     def __init__(self):
         self.calculator = PropertyHealthCalculator()
+        self.auth_manager = AuthenticationManager()
         self.init_session_state()
     
     def init_session_state(self):
@@ -229,51 +375,111 @@ class Dashboard:
             total_maintenance_cost = sum([r.cost for r in st.session_state.maintenance_records])
             st.metric("Total Maintenance Cost", f"${total_maintenance_cost:,.0f}")
     
-    def render_property_input(self):
-        """Render property input form."""
-        st.sidebar.header("Add New Property")
+    def render_property_management(self):
+        """Render property management section with add/delete functionality."""
+        st.sidebar.header("Property Management")
         
-        with st.sidebar.form("property_form"):
-            address = st.text_input("Property Address")
-            year_built = st.number_input("Year Built", min_value=1800, max_value=2024, value=2000)
-            square_footage = st.number_input("Square Footage", min_value=500, max_value=10000, value=2000)
-            
-            property_type = st.selectbox("Property Type", [
-                "Single Family", "Townhouse", "Condo", "Multi-Family", "Commercial"
-            ])
-            
-            roof_material = st.selectbox("Roof Material", [
-                "Asphalt Shingles", "Metal", "Tile", "Slate", "Wood"
-            ])
-            
-            foundation_type = st.selectbox("Foundation Type", [
-                "Concrete Slab", "Basement", "Crawl Space", "Pier & Beam"
-            ])
-            
-            hvac_age = st.number_input("HVAC System Age (years)", min_value=0, max_value=50, value=5)
-            electrical_age = st.number_input("Electrical System Age (years)", min_value=0, max_value=100, value=15)
-            plumbing_age = st.number_input("Plumbing Age (years)", min_value=0, max_value=100, value=20)
-            
-            last_inspection = st.date_input("Last Inspection Date").strftime("%Y-%m-%d")
-            
-            submitted = st.form_submit_button("Add Property")
-            
-            if submitted and address:
-                new_property = Property(
-                    address=address,
-                    year_built=year_built,
-                    square_footage=square_footage,
-                    property_type=property_type,
-                    roof_material=roof_material,
-                    foundation_type=foundation_type,
-                    hvac_age=hvac_age,
-                    electrical_age=electrical_age,
-                    plumbing_age=plumbing_age,
-                    last_inspection=last_inspection
+        # Add new property section
+        with st.sidebar.expander("➕ Add New Property", expanded=True):
+            with st.form("property_form"):
+                address = st.text_input("Property Address")
+                year_built = st.number_input("Year Built", min_value=1800, max_value=2024, value=2000)
+                square_footage = st.number_input("Square Footage", min_value=500, max_value=10000, value=2000)
+                
+                property_type = st.selectbox("Property Type", [
+                    "Single Family", "Townhouse", "Condo", "Multi-Family", "Commercial"
+                ])
+                
+                roof_material = st.selectbox("Roof Material", [
+                    "Asphalt Shingles", "Metal", "Tile", "Slate", "Wood"
+                ])
+                
+                foundation_type = st.selectbox("Foundation Type", [
+                    "Concrete Slab", "Basement", "Crawl Space", "Pier & Beam"
+                ])
+                
+                hvac_age = st.number_input("HVAC System Age (years)", min_value=0, max_value=50, value=5)
+                electrical_age = st.number_input("Electrical System Age (years)", min_value=0, max_value=100, value=15)
+                plumbing_age = st.number_input("Plumbing Age (years)", min_value=0, max_value=100, value=20)
+                
+                last_inspection = st.date_input("Last Inspection Date").strftime("%Y-%m-%d")
+                
+                submitted = st.form_submit_button("Add Property", type="primary")
+                
+                if submitted and address:
+                    new_property = Property(
+                        address=address,
+                        year_built=year_built,
+                        square_footage=square_footage,
+                        property_type=property_type,
+                        roof_material=roof_material,
+                        foundation_type=foundation_type,
+                        hvac_age=hvac_age,
+                        electrical_age=electrical_age,
+                        plumbing_age=plumbing_age,
+                        last_inspection=last_inspection
+                    )
+                    st.session_state.properties.append(new_property)
+                    st.success(f"✅ Added property: {address}")
+                    st.rerun()
+        
+        # Delete property section
+        if st.session_state.properties:
+            with st.sidebar.expander("🗑️ Delete Property"):
+                st.warning("⚠️ This action cannot be undone!")
+                
+                property_addresses = [f"{i+1}. {prop.address}" for i, prop in enumerate(st.session_state.properties)]
+                selected_to_delete = st.selectbox(
+                    "Select property to delete:", 
+                    property_addresses,
+                    key="delete_property_selector"
                 )
-                st.session_state.properties.append(new_property)
-                st.success(f"Added property: {address}")
-                st.rerun()
+                
+                if selected_to_delete:
+                    selected_idx = int(selected_to_delete.split('.')[0]) - 1
+                    property_to_delete = st.session_state.properties[selected_idx]
+                    
+                    st.write(f"**Property:** {property_to_delete.address}")
+                    st.write(f"**Built:** {property_to_delete.year_built}")
+                    st.write(f"**Type:** {property_to_delete.property_type}")
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("🗑️ Delete", type="secondary", key="confirm_delete"):
+                            # Remove associated maintenance records
+                            st.session_state.maintenance_records = [
+                                r for r in st.session_state.maintenance_records 
+                                if r not in self.get_property_maintenance_records(property_to_delete)
+                            ]
+                            
+                            # Remove property
+                            del st.session_state.properties[selected_idx]
+                            
+                            # Reset selected property index if needed
+                            if st.session_state.selected_property_idx >= len(st.session_state.properties):
+                                st.session_state.selected_property_idx = max(0, len(st.session_state.properties) - 1)
+                            
+                            st.success(f"🗑️ Deleted property: {property_to_delete.address}")
+                            st.rerun()
+                    
+                    with col2:
+                        st.button("Cancel", key="cancel_delete")
+        
+        # Property summary
+        if st.session_state.properties:
+            st.sidebar.markdown("---")
+            st.sidebar.write(f"**Total Properties:** {len(st.session_state.properties)}")
+            for i, prop in enumerate(st.session_state.properties):
+                score = self.calculator.calculate_overall_score(prop)['overall_score']
+                emoji = "🟢" if score >= 80 else "🟡" if score >= 60 else "🔴"
+                st.sidebar.write(f"{emoji} {prop.address[:25]}{'...' if len(prop.address) > 25 else ''}")
+    
+    def get_property_maintenance_records(self, property_data: Property) -> List[MaintenanceRecord]:
+        """Get maintenance records for a specific property."""
+        return [
+            r for r in st.session_state.maintenance_records 
+            if property_data.address in [prop.address for prop in st.session_state.properties]
+        ]
     
     def render_maintenance_input(self):
         """Render maintenance record input."""
@@ -310,14 +516,14 @@ class Dashboard:
                 st.success("Added maintenance record")
                 st.rerun()
     
-    def render_property_selector(self):
+    def render_property_selector(self, key_suffix=""):
         """Render property selector."""
         if not st.session_state.properties:
             st.info("👈 Add a property to get started!")
             return None
             
         addresses = [prop.address for prop in st.session_state.properties]
-        selected_address = st.selectbox("Select Property", addresses)
+        selected_address = st.selectbox("Select Property", addresses, key=f"property_selector_{key_suffix}")
         
         selected_idx = addresses.index(selected_address)
         st.session_state.selected_property_idx = selected_idx
@@ -378,10 +584,7 @@ class Dashboard:
         """Render maintenance history for selected property."""
         st.subheader("Maintenance History")
         
-        property_records = [
-            r for r in st.session_state.maintenance_records 
-            if property_data.address in [prop.address for prop in st.session_state.properties]
-        ]
+        property_records = self.get_property_maintenance_records(property_data)
         
         if not property_records:
             st.info("No maintenance records found for this property.")
@@ -594,12 +797,19 @@ class Dashboard:
         st.dataframe(display_df, use_container_width=True)
     
     def run(self):
-        """Run the main dashboard."""
+        """Run the main dashboard with authentication."""
+        # Check authentication first
+        if not self.auth_manager.is_authenticated():
+            self.auth_manager.render_auth_screen()
+            return
+        
+        # Main dashboard
         self.render_header()
         
-        # Sidebar inputs
-        self.render_property_input()
+        # Sidebar management
+        self.render_property_management()
         self.render_maintenance_input()
+        self.auth_manager.render_session_info()
         
         # Main content tabs
         tab1, tab2, tab3, tab4 = st.tabs([
@@ -607,14 +817,14 @@ class Dashboard:
         ])
         
         with tab1:
-            selected_property = self.render_property_selector()
+            selected_property = self.render_property_selector("health")
             if selected_property:
                 self.render_health_score_visualization(selected_property)
                 self.render_detailed_breakdown(selected_property)
                 self.render_predictions_and_recommendations(selected_property)
         
         with tab2:
-            selected_property = self.render_property_selector()
+            selected_property = self.render_property_selector("maintenance")
             if selected_property:
                 self.render_maintenance_history(selected_property)
         
